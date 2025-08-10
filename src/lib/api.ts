@@ -39,4 +39,45 @@ export async function sendChat(text: string): Promise<{ userMessage: Message; bo
   };
 }
 
+// Auth helpers
+const TOKEN_KEY = "navitech_token";
+export function setToken(token: string) {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+export function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+export async function authRegister(payload: { name: string; email: string; password: string; confirmPassword: string }) {
+  const res = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || "Failed to register");
+  return res.json();
+}
+
+export async function authLogin(payload: { email: string; password: string }) {
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || "Failed to login");
+  return res.json();
+}
+
+export async function authMe() {
+  const token = getToken();
+  const res = await fetch("/api/auth/me", {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error((await res.json()).error || "Failed to load user");
+  return res.json();
+}
+
 
