@@ -73,17 +73,32 @@ router.get("/auth/me", requireAuth, async (req, res) => {
 
 router.patch("/auth/profile", requireAuth, async (req, res) => {
   try {
-    const { name, email, university } = req.body || {};
+    const { name, email, university, stats } = req.body || {};
     const update = {};
     if (typeof name === "string" && name.trim()) update.name = name.trim();
     if (typeof email === "string" && email.trim()) update.email = email.trim().toLowerCase();
     if (typeof university === "string") update.university = university.trim();
+    
+    // Allow updating user stats
+    if (stats && typeof stats === "object") {
+      if (typeof stats.completed === "number") update["stats.completed"] = stats.completed;
+      if (typeof stats.inProgress === "number") update["stats.inProgress"] = stats.inProgress;
+      if (typeof stats.studyTimeHours === "number") update["stats.studyTimeHours"] = stats.studyTimeHours;
+      if (typeof stats.streak === "number") update["stats.streak"] = stats.streak;
+    }
+    
     if (Object.keys(update).length === 0) {
       return res.status(400).json({ error: "No fields to update" });
     }
     const user = await User.findByIdAndUpdate(req.user.id, update, { new: true, runValidators: true }).lean();
     if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ id: user._id, name: user.name, email: user.email, university: user.university ?? "" });
+    res.json({ 
+      id: user._id, 
+      name: user.name, 
+      email: user.email, 
+      university: user.university ?? "",
+      stats: user.stats || {}
+    });
   } catch (err) {
     console.error("[PATCH /api/auth/profile]", err);
     if (err?.code === 11000 && err?.keyPattern?.email) {

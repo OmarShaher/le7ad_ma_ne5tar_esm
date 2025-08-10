@@ -19,8 +19,31 @@ async function run() {
   let user = await User.findOne({ email });
   if (!user) {
     const passwordHash = await hashPassword("Test1234");
-    user = await User.create({ name: "Test User", email, passwordHash, university: "" });
+    user = await User.create({ 
+      name: "Test User", 
+      email, 
+      passwordHash, 
+      university: "",
+      stats: {
+        completed: 24,
+        inProgress: 8,
+        studyTimeHours: 42,
+        streak: 15,
+        lastActivity: new Date(),
+      }
+    });
     console.log("Seeded test user:", email, "password: Test1234");
+  } else {
+    // Update existing user with stats
+    await User.findByIdAndUpdate(user._id, {
+      $set: {
+        'stats.completed': 24,
+        'stats.inProgress': 8,
+        'stats.studyTimeHours': 42,
+        'stats.streak': 15,
+        'stats.lastActivity': new Date(),
+      }
+    });
   }
 
   const userId = user._id;
@@ -59,7 +82,7 @@ async function run() {
     }))
   );
 
-  // Seed summary matching UI
+  // Seed summary (without stats since they're now in User)
   await DashboardSummary.findOneAndUpdate(
     { userId },
     {

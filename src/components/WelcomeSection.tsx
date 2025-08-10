@@ -1,6 +1,8 @@
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Target, Clock, Zap } from "lucide-react";
+import { fetchDashboardSummary, type DashboardSummary } from "@/lib/api";
+import { useState, useEffect } from "react";
 
 interface WelcomeSectionProps {
   userName?: string;
@@ -8,8 +10,27 @@ interface WelcomeSectionProps {
 }
 
 export function WelcomeSection({ userName = "Ahmed", progress = 65 }: WelcomeSectionProps) {
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await fetchDashboardSummary();
+        setSummary(data);
+      } catch {
+        // Keep default values if fetch fails
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? "صباح الخير" : currentHour < 18 ? "مساء الخير" : "مساء الخير";
+
+  // Use data from summary if available, otherwise use defaults
+  const stats = summary?.stats || { completed: 24, inProgress: 8, studyTimeHours: 42, streak: 15 };
 
   return (
     <div className="space-y-6">
@@ -50,7 +71,7 @@ export function WelcomeSection({ userName = "Ahmed", progress = 65 }: WelcomeSec
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold text-foreground">24</p>
+                <p className="text-2xl font-bold text-foreground">{loading ? '—' : stats.completed}</p>
               </div>
             </div>
           </CardContent>
@@ -64,7 +85,7 @@ export function WelcomeSection({ userName = "Ahmed", progress = 65 }: WelcomeSec
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">In Progress</p>
-                <p className="text-2xl font-bold text-foreground">8</p>
+                <p className="text-2xl font-bold text-foreground">{loading ? '—' : stats.inProgress}</p>
               </div>
             </div>
           </CardContent>
@@ -78,7 +99,7 @@ export function WelcomeSection({ userName = "Ahmed", progress = 65 }: WelcomeSec
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Study Time</p>
-                <p className="text-2xl font-bold text-foreground">42h</p>
+                <p className="text-2xl font-bold text-foreground">{loading ? '—' : `${stats.studyTimeHours}h`}</p>
               </div>
             </div>
           </CardContent>
@@ -92,7 +113,7 @@ export function WelcomeSection({ userName = "Ahmed", progress = 65 }: WelcomeSec
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Streak</p>
-                <p className="text-2xl font-bold text-foreground">15</p>
+                <p className="text-2xl font-bold text-foreground">{loading ? '—' : stats.streak}</p>
               </div>
             </div>
           </CardContent>

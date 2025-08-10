@@ -131,6 +131,12 @@ export type DashboardSummary = {
     mockInterviews: { scheduled: number; completed: number; avgScore: number };
     companyPrep: { activeCompany: string; progressPercent: number };
   };
+  stats: {
+    completed: number;
+    inProgress: number;
+    studyTimeHours: number;
+    streak: number;
+  };
   lastUpdated: string;
 };
 
