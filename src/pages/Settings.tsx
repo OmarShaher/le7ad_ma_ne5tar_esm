@@ -1,3 +1,5 @@
+// Modified: Populate Profile form with authenticated user's data from /api/auth/me
+import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +9,37 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { User, Bell, Languages, Shield, Palette } from "lucide-react";
+import { authMe, getToken, updateProfile } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
 
 const Settings = () => {
+  const { toast } = useToast();
+  const [profile, setProfile] = React.useState<{ name: string; email: string; university: string }>({
+    name: "",
+    email: "",
+    university: "",
+  });
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [saving, setSaving] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    (async () => {
+      try {
+        const me = await authMe();
+        setProfile({ name: me?.name ?? "", email: me?.email ?? "", university: "" });
+      } catch {
+        // ignore unauthenticated
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-8">
@@ -29,17 +60,34 @@ const Settings = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue="Ahmed Mohamed" />
+                <Input id="name" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} disabled={loading} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue="ahmed@example.com" />
+                <Input id="email" type="email" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} disabled={loading} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="university">University</Label>
-                <Input id="university" defaultValue="Cairo University" />
+                <Input id="university" value={profile.university} onChange={(e) => setProfile({ ...profile, university: e.target.value })} disabled={loading} />
               </div>
-              <Button className="w-full">Update Profile</Button>
+              <Button className="w-full" disabled={loading || saving} onClick={async () => {
+                setSaving(true);
+                try {
+                  const updated = await updateProfile(profile);
+                  setProfile({
+                    name: updated.name,
+                    email: updated.email,
+                    university: updated.university ?? "",
+                  });
+                  toast({ title: "Profile updated" });
+                } catch (err: any) {
+                  toast({ title: "Update failed", description: String(err.message), variant: "destructive" });
+                } finally {
+                  setSaving(false);
+                }
+              }}>
+                {loading ? "Loading..." : saving ? "Saving..." : "Update Profile"}
+              </Button>
             </CardContent>
           </Card>
 

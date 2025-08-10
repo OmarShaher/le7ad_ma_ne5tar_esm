@@ -80,4 +80,18 @@ export async function authMe() {
   return res.json();
 }
 
+export async function updateProfile(payload: { name?: string; email?: string; university?: string }) {
+  const token = getToken();
+  const res = await fetch("/api/auth/profile", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error((await res.json()).error || "Failed to update profile");
+  return res.json();
+}
+
 

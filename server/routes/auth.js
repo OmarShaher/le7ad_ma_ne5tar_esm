@@ -64,10 +64,32 @@ router.get("/auth/me", requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).lean();
     if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ id: user._id, name: user.name, email: user.email });
+    res.json({ id: user._id, name: user.name, email: user.email, university: user.university ?? "" });
   } catch (err) {
     console.error("[GET /api/auth/me]", err);
     res.status(500).json({ error: "Failed to load user" });
+  }
+});
+
+router.patch("/auth/profile", requireAuth, async (req, res) => {
+  try {
+    const { name, email, university } = req.body || {};
+    const update = {};
+    if (typeof name === "string" && name.trim()) update.name = name.trim();
+    if (typeof email === "string" && email.trim()) update.email = email.trim().toLowerCase();
+    if (typeof university === "string") update.university = university.trim();
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+    const user = await User.findByIdAndUpdate(req.user.id, update, { new: true, runValidators: true }).lean();
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json({ id: user._id, name: user.name, email: user.email, university: user.university ?? "" });
+  } catch (err) {
+    console.error("[PATCH /api/auth/profile]", err);
+    if (err?.code === 11000 && err?.keyPattern?.email) {
+      return res.status(409).json({ error: "Email already in use" });
+    }
+    res.status(500).json({ error: "Failed to update profile" });
   }
 });
 
