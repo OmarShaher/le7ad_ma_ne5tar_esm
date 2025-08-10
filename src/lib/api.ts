@@ -85,8 +85,17 @@ export async function authMe() {
   const res = await fetch("/api/auth/me", {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
-  if (!res.ok) throw new Error((await res.json()).error || "Failed to load user");
-  return res.json();
+  
+  // Handle empty or invalid JSON response
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Server returned invalid response");
+  }
+  
+  if (!res.ok) throw new Error(data.error || "Failed to load user");
+  return data;
 }
 
 export async function updateProfile(payload: { name?: string; email?: string; university?: string }) {
@@ -99,8 +108,17 @@ export async function updateProfile(payload: { name?: string; email?: string; un
     },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error((await res.json()).error || "Failed to update profile");
-  return res.json();
+  
+  // Handle empty or invalid JSON response
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Server returned invalid response");
+  }
+  
+  if (!res.ok) throw new Error(data.error || "Failed to update profile");
+  return data;
 }
 
 export type DashboardSummary = {
@@ -121,8 +139,17 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
   const res = await fetch("/api/dashboard/summary", {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
-  if (!res.ok) throw new Error((await res.json()).error || "Failed to load summary");
-  return res.json();
+  
+  // Handle empty or invalid JSON response
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Server returned invalid response");
+  }
+  
+  if (!res.ok) throw new Error(data.error || "Failed to load summary");
+  return data;
 }
 
 export type Question = {
@@ -141,8 +168,17 @@ export async function fetchQuestions(params?: { limit?: number; difficulty?: str
   if (params?.limit) q.set('limit', String(params.limit));
   if (params?.difficulty) q.set('difficulty', params.difficulty);
   const res = await fetch(`/api/questions?${q.toString()}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-  if (!res.ok) throw new Error((await res.json()).error || 'Failed to load questions');
-  return res.json();
+  
+  // Handle empty or invalid JSON response
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Server returned invalid response");
+  }
+  
+  if (!res.ok) throw new Error(data.error || 'Failed to load questions');
+  return data;
 }
 
 export async function submitAttempt(questionId: string, selectedIndex: number) {
@@ -152,8 +188,17 @@ export async function submitAttempt(questionId: string, selectedIndex: number) {
     headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify({ selectedIndex })
   });
-  if (!res.ok) throw new Error((await res.json()).error || 'Failed to submit');
-  return res.json();
+  
+  // Handle empty or invalid JSON response
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Server returned invalid response");
+  }
+  
+  if (!res.ok) throw new Error(data.error || 'Failed to submit');
+  return data;
 }
 
 

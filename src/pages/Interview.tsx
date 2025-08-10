@@ -74,7 +74,7 @@ const Interview = () => {
               <p className="text-muted-foreground mb-4">Practice common technical interview questions</p>
               <Badge className="mb-4">{loading ? '—' : `${techTotal}+ Questions`}</Badge>
               <Progress value={loading ? 0 : techProgress} className="mb-4" />
-              <Button className="w-full">Practice Now</Button>
+              <Button className="w-full" onClick={() => window.location.href = '/practice'}>Practice Now</Button>
             </CardContent>
           </Card>
 
