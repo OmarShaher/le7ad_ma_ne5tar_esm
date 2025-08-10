@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { User, Bell, Languages, Shield, Palette } from "lucide-react";
 import { authMe, getToken, updateProfile } from "@/lib/api";
+import { EGYPT_UNIVERSITIES, OTHER_UNI_VALUE } from "@/lib/egypt-universities";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 
 const Settings = () => {
@@ -19,6 +21,7 @@ const Settings = () => {
     email: "",
     university: "",
   });
+  const [uniOther, setUniOther] = React.useState<string>("");
   const [loading, setLoading] = React.useState<boolean>(true);
   const [saving, setSaving] = React.useState<boolean>(false);
 
@@ -31,7 +34,11 @@ const Settings = () => {
     (async () => {
       try {
         const me = await authMe();
-        setProfile({ name: me?.name ?? "", email: me?.email ?? "", university: "" });
+        setProfile({ name: me?.name ?? "", email: me?.email ?? "", university: me?.university ?? "" });
+        if (me?.university && !EGYPT_UNIVERSITIES.includes(me.university)) {
+          setProfile((p) => ({ ...p, university: OTHER_UNI_VALUE }));
+          setUniOther(me.university);
+        }
       } catch {
         // ignore unauthenticated
       } finally {
@@ -68,17 +75,55 @@ const Settings = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="university">University</Label>
-                <Input id="university" value={profile.university} onChange={(e) => setProfile({ ...profile, university: e.target.value })} disabled={loading} />
+                <Select
+                  value={profile.university || ""}
+                  onValueChange={(v) => {
+                    setProfile({ ...profile, university: v });
+                  }}
+                  disabled={loading}
+                >
+                  <SelectTrigger id="university">
+                    <SelectValue placeholder="Select your university" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {EGYPT_UNIVERSITIES.map((u) => (
+                      <SelectItem key={u} value={u}>{u}</SelectItem>
+                    ))}
+                    <SelectItem value={OTHER_UNI_VALUE}>{OTHER_UNI_VALUE}</SelectItem>
+                  </SelectContent>
+                </Select>
+                {profile.university === OTHER_UNI_VALUE && (
+                  <div className="pt-2">
+                    <Label htmlFor="university-other" className="text-sm">Specify university</Label>
+                    <Input
+                      id="university-other"
+                      placeholder="Enter your university"
+                      value={uniOther}
+                      onChange={(e) => setUniOther(e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                )}
               </div>
               <Button className="w-full" disabled={loading || saving} onClick={async () => {
                 setSaving(true);
                 try {
-                  const updated = await updateProfile(profile);
+                  const payload = {
+                    ...profile,
+                    university: profile.university === OTHER_UNI_VALUE ? uniOther.trim() : profile.university,
+                  };
+                  const updated = await updateProfile(payload);
                   setProfile({
                     name: updated.name,
                     email: updated.email,
-                    university: updated.university ?? "",
+                    university: EGYPT_UNIVERSITIES.includes(updated.university ?? "") ? updated.university : (updated.university ? OTHER_UNI_VALUE : ""),
                   });
+                  // restore other value for custom universities
+                  if (updated.university && !EGYPT_UNIVERSITIES.includes(updated.university)) {
+                    setUniOther(updated.university);
+                  } else {
+                    setUniOther("");
+                  }
                   toast({ title: "Profile updated" });
                 } catch (err: any) {
                   toast({ title: "Update failed", description: String(err.message), variant: "destructive" });
