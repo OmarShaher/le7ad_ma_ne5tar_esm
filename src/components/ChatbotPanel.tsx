@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Send, Bot, User, Languages, Minimize2, Maximize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchMessages as apiFetchMessages, sendChat } from "@/lib/api";
 
 interface Message {
   id: string;
@@ -45,6 +46,24 @@ export function ChatbotPanel() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const serverMessages = await apiFetchMessages();
+        if (!isMounted) return;
+        if (serverMessages.length > 0) {
+          setMessages(serverMessages);
+        }
+      } catch (e) {
+        // Ignore and keep local initial messages
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
@@ -60,8 +79,11 @@ export function ChatbotPanel() {
     setInputText("");
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const { botMessage } = await sendChat(userMessage.text);
+      setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      // Fallback to local simulation if server is unavailable
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: userMessage.language === 'ar' 
@@ -72,8 +94,9 @@ export function ChatbotPanel() {
         language: userMessage.language
       };
       setMessages(prev => [...prev, botMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleSuggestedQuestion = (question: string) => {
