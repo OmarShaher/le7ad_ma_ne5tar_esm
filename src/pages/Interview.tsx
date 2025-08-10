@@ -1,40 +1,11 @@
-import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Briefcase, Calendar, Target } from "lucide-react";
-import { fetchDashboardSummary } from "@/lib/api";
+import { Briefcase, Calendar, Target, Clock } from "lucide-react";
 
 const Interview = () => {
-  const [summary, setSummary] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const s = await fetchDashboardSummary();
-        setSummary(s);
-      } catch {
-        // keep defaults
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  const mockCount = summary?.mockInterviewsCount ?? 0;
-  const successPercent = Math.round((summary?.successRate ?? 0) * 100);
-  const solved = summary?.problemsSolvedCount ?? 0;
-  const techTotal = summary?.cards?.technicalQuestions?.total ?? 0;
-  const techCompleted = summary?.cards?.technicalQuestions?.completed ?? 0;
-  const techProgress = summary?.cards?.technicalQuestions?.progressPercent ?? 0;
-  const mockCompleted = summary?.cards?.mockInterviews?.completed ?? 0;
-  const mockAvg = summary?.cards?.mockInterviews?.avgScore ?? 0;
-  const company = summary?.cards?.companyPrep?.activeCompany || "FAANG Focus";
-  const companyProgress = summary?.cards?.companyPrep?.progressPercent ?? 0;
-
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto space-y-8">
@@ -47,15 +18,15 @@ const Interview = () => {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
               <div>
-                <div className="text-3xl font-bold">{loading ? '—' : mockCount}</div>
+                <div className="text-3xl font-bold">15</div>
                 <div className="text-primary-foreground/80">Mock Interviews</div>
               </div>
               <div>
-                <div className="text-3xl font-bold">{loading ? '—' : `${successPercent}%`}</div>
+                <div className="text-3xl font-bold">89%</div>
                 <div className="text-primary-foreground/80">Success Rate</div>
               </div>
               <div>
-                <div className="text-3xl font-bold">{loading ? '—' : solved}</div>
+                <div className="text-3xl font-bold">32</div>
                 <div className="text-primary-foreground/80">Problems Solved</div>
               </div>
             </div>
@@ -72,8 +43,8 @@ const Interview = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">Practice common technical interview questions</p>
-              <Badge className="mb-4">{loading ? '—' : `${techTotal}+ Questions`}</Badge>
-              <Progress value={loading ? 0 : techProgress} className="mb-4" />
+              <Badge className="mb-4">200+ Questions</Badge>
+              <Progress value={75} className="mb-4" />
               <Button className="w-full">Practice Now</Button>
             </CardContent>
           </Card>
@@ -88,7 +59,7 @@ const Interview = () => {
             <CardContent>
               <p className="text-muted-foreground mb-4">Simulate real interview conditions</p>
               <Badge className="mb-4">AI Powered</Badge>
-              <Progress value={loading ? 0 : Math.min(100, Math.round((mockCompleted / Math.max(1, mockCount)) * 100))} className="mb-4" />
+              <Progress value={60} className="mb-4" />
               <Button className="w-full">Schedule Mock</Button>
             </CardContent>
           </Card>
@@ -102,8 +73,8 @@ const Interview = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">Prepare for specific companies</p>
-              <Badge className="mb-4">{company || '—'}</Badge>
-              <Progress value={loading ? 0 : companyProgress} className="mb-4" />
+              <Badge className="mb-4">FAANG Focus</Badge>
+              <Progress value={45} className="mb-4" />
               <Button className="w-full">Start Prep</Button>
             </CardContent>
           </Card>

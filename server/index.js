@@ -7,8 +7,6 @@ import { fileURLToPath } from "url";
 import { connectToDatabase } from "./db.js";
 import chatRoutes from "./routes/chat.js";
 import authRoutes from "./routes/auth.js";
-import dashboardRoutes from "./routes/dashboard.js";
-import questionRoutes from "./routes/questions.js";
 
 // Ensure we load env from server/.env (not project root)
 const __filename = fileURLToPath(import.meta.url);
@@ -24,8 +22,6 @@ app.use(express.json());
 
 app.use("/api", chatRoutes);
 app.use("/api", authRoutes);
-app.use("/api", dashboardRoutes);
-app.use("/api", questionRoutes);
 
 // Basic health check at root
 app.get("/", (req, res) => {
