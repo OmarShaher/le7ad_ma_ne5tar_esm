@@ -67,8 +67,17 @@ export async function authLogin(payload: { email: string; password: string }) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error((await res.json()).error || "Failed to login");
-  return res.json();
+
+  // Handle empty or invalid JSON response
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Unexpected end of JSON input");
+  }
+
+  if (!res.ok) throw new Error(data.error || "Failed to login");
+  return data;
 }
 
 export async function authMe() {
