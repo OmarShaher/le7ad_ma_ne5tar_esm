@@ -12,6 +12,7 @@ const Practice = () => {
   const [questions, setQuestions] = React.useState<Question[]>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [selectedChoice, setSelectedChoice] = React.useState<Record<string, number | undefined>>({});
+  const [submittedAnswers, setSubmittedAnswers] = React.useState<Record<string, { selectedIndex: number; status: string; correctIndex: number }>>({});
 
   const load = async () => {
     setLoading(true);
@@ -19,6 +20,7 @@ const Practice = () => {
       const qs = await fetchQuestions({ limit: 6 });
       setQuestions(qs);
       setSelectedChoice({});
+      setSubmittedAnswers({});
     } catch (e: any) {
       toast({ title: 'Failed to load questions', description: String(e.message), variant: 'destructive' });
     } finally {
@@ -62,16 +64,39 @@ const Practice = () => {
                     {q.description && <p className="text-sm text-muted-foreground mt-1">{q.description}</p>}
                     {Array.isArray(q.choices) && q.choices.length > 0 && (
                       <div className="mt-3 grid gap-2">
-                        {q.choices.map((c, idx) => (
-                          <Button
-                            key={idx}
-                            variant={selectedChoice[q._id] === idx ? 'default' : 'outline'}
-                            className="justify-start"
-                            onClick={() => setSelectedChoice((s) => ({ ...s, [q._id]: idx }))}
-                          >
-                            {c}
-                          </Button>
-                        ))}
+                        {q.choices.map((c, idx) => {
+                          const isSubmitted = submittedAnswers[q._id];
+                          const isSelected = selectedChoice[q._id] === idx;
+                          const isCorrect = isSubmitted && idx === isSubmitted.correctIndex;
+                          const isWrong = isSubmitted && idx === isSubmitted.selectedIndex && isSubmitted.status === 'incorrect';
+                          
+                          let buttonVariant: "default" | "outline" | "destructive" | "secondary" = 'outline';
+                          let buttonClass = "justify-start";
+                          
+                          if (isSubmitted) {
+                            if (isCorrect) {
+                              buttonVariant = 'default';
+                              buttonClass += " bg-green-500 hover:bg-green-600 text-white border-green-500";
+                            } else if (isWrong) {
+                              buttonVariant = 'destructive';
+                              buttonClass += " bg-red-500 hover:bg-red-600 text-white border-red-500";
+                            }
+                          } else if (isSelected) {
+                            buttonVariant = 'default';
+                          }
+                          
+                          return (
+                            <Button
+                              key={idx}
+                              variant={buttonVariant}
+                              className={buttonClass}
+                              onClick={() => !isSubmitted && setSelectedChoice((s) => ({ ...s, [q._id]: idx }))}
+                              disabled={isSubmitted}
+                            >
+                              {c}
+                            </Button>
+                          );
+                        })}
                       </div>
                     )}
                     <div className="mt-3 flex gap-2">
@@ -81,14 +106,29 @@ const Practice = () => {
                             const idx = selectedChoice[q._id];
                             if (typeof idx !== 'number') return;
                             const res = await submitAttempt(q._id, idx);
-                            toast({ title: res.status === 'correct' ? 'Correct!' : 'Incorrect', description: q.title });
+                            
+                            // Save the submitted answer with correct answer info
+                            setSubmittedAnswers(prev => ({
+                              ...prev,
+                              [q._id]: {
+                                selectedIndex: idx,
+                                status: res.status,
+                                correctIndex: q.correctIndex ?? -1
+                              }
+                            }));
+                            
+                            toast({ 
+                              title: res.status === 'correct' ? 'Correct! ✅' : 'Incorrect ❌', 
+                              description: q.title,
+                              variant: res.status === 'correct' ? 'default' : 'destructive'
+                            });
                           } catch (e: any) {
                             toast({ title: 'Submit failed', description: String(e.message), variant: 'destructive' });
                           }
                         }}
-                        disabled={typeof selectedChoice[q._id] !== 'number'}
+                        disabled={typeof selectedChoice[q._id] !== 'number' || !!submittedAnswers[q._id]}
                       >
-                        Submit
+                        {submittedAnswers[q._id] ? 'Submitted' : 'Submit'}
                       </Button>
                     </div>
                   </div>
