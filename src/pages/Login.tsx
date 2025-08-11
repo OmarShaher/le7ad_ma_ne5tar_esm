@@ -6,11 +6,14 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { authLogin, setToken } from "@/lib/api";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Login() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
@@ -20,8 +23,12 @@ export default function Login() {
     try {
       const res = await authLogin(form);
       setToken(res.token);
+      login(res.token, res.user);
       toast({ title: "Welcome back", description: res.user.email });
-      navigate("/");
+      
+      // Redirect to the page they were trying to access, or home
+      const from = location.state?.from?.pathname || "/";
+      navigate(from, { replace: true });
     } catch (err: any) {
       toast({ title: "Login failed", description: String(err.message), variant: "destructive" });
     } finally {

@@ -1,33 +1,10 @@
-// Added: Minimal protected dashboard using existing UI; shows user info and logout
-import { useEffect, useState } from "react";
+// Added: Minimal protected dashboard using existing UI; shows user info
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { authMe, clearToken } from "@/lib/api";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [user, setUser] = useState<{ id: string; name: string; email: string } | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const me = await authMe();
-        setUser(me);
-      } catch (err: any) {
-        toast({ title: "Session expired", description: String(err.message), variant: "destructive" });
-        navigate("/login");
-      }
-    })();
-  }, [navigate, toast]);
-
-  const logout = () => {
-    clearToken();
-    navigate("/login");
-  };
+  const { user } = useAuth();
 
   return (
     <DashboardLayout>
@@ -41,7 +18,10 @@ export default function Dashboard() {
             <>
               <div className="text-sm">Name: {user.name}</div>
               <div className="text-sm">Email: {user.email}</div>
-              <Button onClick={logout} className="mt-4 bg-gradient-primary">Logout</Button>
+              {user.university && <div className="text-sm">University: {user.university}</div>}
+              <div className="text-sm text-muted-foreground mt-4">
+                Go to Settings to logout or manage your account.
+              </div>
             </>
           ) : (
             <div>Loading...</div>

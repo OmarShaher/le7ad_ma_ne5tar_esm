@@ -13,9 +13,13 @@ import { authMe, getToken, updateProfile } from "@/lib/api";
 import { EGYPT_UNIVERSITIES, OTHER_UNI_VALUE } from "@/lib/egypt-universities";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = React.useState<{ name: string; email: string; university: string }>({
     name: "",
     email: "",
@@ -46,6 +50,12 @@ const Settings = () => {
       }
     })();
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    toast({ title: "Logged out", description: "You have been successfully logged out" });
+    navigate("/login");
+  };
 
   return (
     <DashboardLayout>
@@ -233,8 +243,8 @@ const Settings = () => {
               <Button variant="outline" className="w-full">
                 Download Data
               </Button>
-              <Button variant="destructive" className="w-full">
-                Delete Account
+              <Button variant="destructive" className="w-full" onClick={handleLogout}>
+                Logout
               </Button>
             </CardContent>
           </Card>

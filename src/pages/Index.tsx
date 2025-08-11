@@ -1,26 +1,13 @@
 // Modified: Pull authenticated user's name for the welcome section
-import * as React from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { WelcomeSection } from "@/components/WelcomeSection";
 import { RoadmapSection } from "@/components/RoadmapSection";
 import { ChatbotPanel } from "@/components/ChatbotPanel";
-import { authMe, getToken } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
-  const [userName, setUserName] = React.useState<string>("Ahmed");
-
-  React.useEffect(() => {
-    const token = getToken();
-    if (!token) return;
-    (async () => {
-      try {
-        const me = await authMe();
-        if (me?.name) setUserName(me.name);
-      } catch {
-        // ignore if unauthenticated
-      }
-    })();
-  }, []);
+  const { user } = useAuth();
+  const userName = user?.name || "Guest";
 
   return (
     <DashboardLayout>

@@ -6,33 +6,17 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authMe, getToken } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [userName, setUserName] = React.useState<string | null>(null);
+  const { user } = useAuth();
+  const userName = user?.name || "Guest";
+  const initial = userName.trim().charAt(0).toUpperCase();
 
-  React.useEffect(() => {
-    let mounted = true;
-    const token = getToken();
-    if (!token) return;
-    (async () => {
-      try {
-        const me = await authMe();
-        if (mounted) setUserName(me?.name ?? null);
-      } catch {
-        // ignore if not authenticated
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const initial = (userName?.trim()?.charAt(0) ?? "A").toUpperCase();
   return (
     <ThemeProvider defaultTheme="light" storageKey="navitech-theme">
       <div className="min-h-screen bg-background flex w-full">
@@ -62,7 +46,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </span>
                 </Button>
                 <ThemeToggle />
-                <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center" title={userName ?? undefined}>
+                <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center" title={userName}>
                   <span className="text-sm font-bold text-primary-foreground">{initial}</span>
                 </div>
               </div>

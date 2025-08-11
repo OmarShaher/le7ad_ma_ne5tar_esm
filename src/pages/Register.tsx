@@ -7,10 +7,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { authRegister, setToken } from "@/lib/api";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Register() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [loading, setLoading] = useState(false);
 
@@ -20,8 +22,9 @@ export default function Register() {
     try {
       const res = await authRegister(form);
       setToken(res.token);
+      login(res.token, res.user);
       toast({ title: "Account created", description: `Welcome, ${res.user.name}` });
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (err: any) {
       toast({ title: "Registration failed", description: String(err.message), variant: "destructive" });
     } finally {
